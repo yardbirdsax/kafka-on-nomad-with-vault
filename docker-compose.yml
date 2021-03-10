@@ -1,0 +1,75 @@
+networks:
+  kafka:
+    name: kafka
+services:
+  zookeeper:
+    image: zookeeper:3.6.2
+    container_name: zookeeper
+    networks:
+      - kafka
+  vault:
+    image: vault:1.6.2
+    container_name: vault
+    networks:
+     - kafka
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_LOCAL_CONFIG: |
+        {
+          "storage": {
+            "file": {"path": "/vault/file"}
+          }, 
+          "default_lease_ttl": "168h", 
+          "max_lease_ttl": "720h",
+          "listener": {
+            "tcp": {
+              "address": "0.0.0.0:8200",
+              "tls_disable": true
+            }
+          },
+          "ui": true
+        }
+      VAULT_ADDR: http://127.0.0.1:8200
+    command:
+      - "server"
+    volumes:
+      - type: bind
+        source: $PWD
+        target: /repo
+      
+  kafka1:
+    container_name: kafka1.broker.kafka.local
+    hostname: kafka1.broker.kafka.local
+    build:
+      context: ./kafka/
+    environment: 
+      VAULT_ADDR: http://vault:8200
+      VAULT_ROLE_ID: ${VAULT_ROLE_ID}
+      VAULT_ROLE_SECRET_ID: ${VAULT_ROLE_SECRET_ID}
+    networks:
+      - kafka
+  producer1:
+    container_name: producer1
+    hostname: producer1.producer.kafka.local
+    build:
+      context: ./producer/
+    environment: 
+      VAULT_ADDR: http://vault:8200
+      VAULT_ROLE_ID: ${VAULT_PRODUCER_ROLE_ID}
+      VAULT_ROLE_SECRET_ID: ${VAULT_PRODUCER_ROLE_SECRET_ID}
+    networks:
+      - kafka
+  consumer1:
+    container_name: consumer1
+    hostname: consumer1.consumer.kafka.local
+    build:
+      context: ./consumer/
+    environment: 
+      VAULT_ADDR: http://vault:8200
+      VAULT_ROLE_ID: ${VAULT_CONSUMER_ROLE_ID}
+      VAULT_ROLE_SECRET_ID: ${VAULT_CONSUMER_ROLE_SECRET_ID}
+    networks:
+      - kafka

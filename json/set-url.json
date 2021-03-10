@@ -1,0 +1,4 @@
+{
+  "issuing_certificates":"http://vault:8200/v1/pki/kafka/ca",
+  "crl_distribution_points":"http://vault:8200/v1/pki/kafka/ca"
+}
