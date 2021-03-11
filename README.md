@@ -180,3 +180,26 @@ This repository contains a reference implementation of how to run an application
   ```
   $ nomad run ./nomad/producer.hcl
   ```
+## Configure for Kafka Consumers
+
+- Create a role for issuing certificates.
+  ```
+  curl -H"X-Vault-Token:${VAULT_TOKEN}" -XPOST -d@json/create-consumer-role.json http://localhost:8200/v1/pki/kafka/roles/kafka-consumer
+  ```
+- Create a policy for Kafka consumers.
+  ```
+  $ docker exec -e VAULT_TOKEN=${VAULT_TOKEN} vault vault policy write kafka-consumer /repo/policies/kafka-consumer.hcl
+  Success! Uploaded policy: kafka-consumer
+  ```
+- Grant producing rights to the consumer.
+  ```
+  $ docker run -it --rm --entrypoint bash --network kafka kafka_vault /opt/kafka/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal 'User:CN=consumer1.consumer.kafka.local' --topic producer-topic --operation Read --operation Describe
+  $ docker run -it --rm --entrypoint bash --network kafka kafka_vault /opt/kafka/bin/kafka-acls.sh --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal 'User:CN=consumer1.consumer.kafka.local' --group consumer-group --operation Read
+  ```
+- Build the Kafka consumer Docker image.
+  ```
+  $ docker build -t kafka-consumer:1.0 ./consumer
+  ```
+- Run a job for the consumer.
+  ```
+  $ nomad run ./nomad/consumer.hcl
