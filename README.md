@@ -148,10 +148,6 @@ This repository contains a reference implementation of how to run an application
   $ VAULT_TOKEN=<paste token from previous step here> nomad agent -dev -config ./nomad/config.hcl
   ```
   Ensure that you see no errors in the log file and that you can browse to Nomad's UI from [[http://localhost:4646]].
-- Start a Producer job.
-  ```
-  $ nomad run ./nomad/producer.hcl
-  ```
 
 ## Configure for Kafka Producers
 
