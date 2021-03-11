@@ -1,4 +1,4 @@
-job "vault" {
+job "kafka-producer" {
   datacenters = ["dc1"]
 
   group "demo" {
